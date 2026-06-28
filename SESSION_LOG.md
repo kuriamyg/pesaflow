@@ -62,58 +62,71 @@ NEXT_PUBLIC_APP_NAME=PesaFlow
 
 ---
 
-## Folder Architecture
+## Folder Architecture (Current State)
 ```
 pesaflow/
 ├── prisma/
-│   ├── schema.prisma         ← full DB schema (9 models)
-│   ├── migrations/           ← 20260628104733_init applied ✅
+│   ├── schema.prisma              ✅ 9 models defined
+│   ├── migrations/                ✅ 20260628104733_init applied
 │   └── migration_lock.toml
-├── prisma.config.ts          ← Prisma 7 config (dotenv + adapter-pg)
+├── prisma.config.ts               ✅ Prisma 7 config (dotenv + adapter-pg)
 ├── src/
+│   ├── middleware.ts              ✅ Route protection (protects all dashboard routes)
 │   ├── app/
 │   │   ├── (auth)/
-│   │   │   ├── login/        ← page pending
-│   │   │   └── register/     ← page pending
+│   │   │   ├── layout.tsx         ✅ Split branding layout (dark left + form right)
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx       ✅ Login page — working + tested
+│   │   │   └── register/
+│   │   │       └── page.tsx       ✅ Register page — working + email confirmed
 │   │   ├── (dashboard)/
-│   │   │   ├── dashboard/    ← page pending
-│   │   │   ├── transactions/ ← page pending
-│   │   │   ├── budgets/      ← page pending
-│   │   │   ├── savings/      ← page pending
-│   │   │   ├── ai-coach/     ← page pending
-│   │   │   └── settings/     ← page pending
+│   │   │   ├── layout.tsx         ✅ Placeholder (needs sidebar update — Phase 4)
+│   │   │   ├── dashboard/
+│   │   │   │   └── page.tsx       ✅ Placeholder (full UI — Phase 4)
+│   │   │   ├── transactions/      ⬜ page pending
+│   │   │   ├── budgets/           ⬜ page pending
+│   │   │   ├── savings/           ⬜ page pending
+│   │   │   ├── ai-coach/          ⬜ page pending
+│   │   │   └── settings/          ⬜ page pending
 │   │   ├── api/
-│   │   │   ├── auth/         ← pending
-│   │   │   ├── transactions/ ← pending
-│   │   │   ├── budgets/      ← pending
-│   │   │   ├── savings/      ← pending
-│   │   │   ├── ai/           ← pending
-│   │   │   └── sms-parse/    ← pending
-│   │   ├── globals.css       ← PesaFlow brand tokens ✅
-│   │   ├── layout.tsx        ← default (needs update)
-│   │   └── page.tsx          ← placeholder landing ✅
+│   │   │   ├── auth/              ⬜ pending
+│   │   │   ├── transactions/      ⬜ pending
+│   │   │   ├── budgets/           ⬜ pending
+│   │   │   ├── savings/           ⬜ pending
+│   │   │   ├── ai/                ⬜ pending
+│   │   │   └── sms-parse/         ⬜ pending
+│   │   ├── globals.css            ✅ PesaFlow brand tokens
+│   │   ├── layout.tsx             ⬜ needs font + metadata update
+│   │   └── page.tsx               ✅ Placeholder landing
 │   ├── components/
-│   │   ├── ui/               ← 17 shadcn components ✅
-│   │   ├── layout/           ← navbar, sidebar pending
-│   │   ├── dashboard/        ← widgets pending
-│   │   ├── transactions/     ← forms pending
-│   │   ├── budgets/          ← pending
-│   │   ├── savings/          ← pending
-│   │   ├── ai/               ← chat UI pending
-│   │   └── auth/             ← login/register forms pending
+│   │   ├── ui/                    ✅ 17 shadcn components
+│   │   ├── layout/
+│   │   │   └── Sidebar.tsx        ✅ Built — needs wiring into dashboard layout
+│   │   ├── dashboard/             ⬜ widgets pending
+│   │   ├── transactions/          ⬜ forms pending
+│   │   ├── budgets/               ⬜ pending
+│   │   ├── savings/               ⬜ pending
+│   │   ├── ai/                    ⬜ chat UI pending
+│   │   └── auth/                  ⬜ pending
 │   ├── lib/
-│   │   ├── supabase/         ← client + server pending
-│   │   ├── prisma/           ← prisma client pending
-│   │   ├── ai/               ← claude integration pending
-│   │   ├── sms-parser/       ← SMS regex engine pending
-│   │   └── validators/       ← zod schemas pending
-│   ├── hooks/                ← custom hooks pending
-│   ├── types/                ← TypeScript types pending
-│   └── store/                ← Zustand stores pending
-├── public/                   ← logo assets pending
-├── .env.local                ← secrets (gitignored) ✅
-├── .gitignore                ← .env* excluded ✅
-└── components.json           ← shadcn config ✅
+│   │   ├── supabase/
+│   │   │   ├── client.ts          ✅ Browser client
+│   │   │   ├── server.ts          ✅ Server client (SSR)
+│   │   │   └── middleware.ts      ✅ Session refresh
+│   │   ├── prisma/
+│   │   │   └── client.ts          ✅ Prisma singleton
+│   │   ├── ai/                    ⬜ Claude integration pending
+│   │   ├── sms-parser/            ⬜ SMS regex engine pending
+│   │   └── validators/            ⬜ Zod schemas pending
+│   ├── hooks/                     ⬜ custom hooks pending
+│   ├── types/
+│   │   └── index.ts               ✅ Full type system + CATEGORY_META
+│   └── store/                     ⬜ Zustand stores pending
+├── public/                        ⬜ logo assets pending
+├── SESSION_LOG.md                 ✅ This file
+├── .env.local                     ✅ secrets (gitignored)
+├── .gitignore                     ✅ .env* excluded
+└── components.json                ✅ shadcn config
 ```
 
 ---
@@ -135,7 +148,7 @@ pesaflow/
 ### Enums
 - `TransactionType`: INCOME, EXPENSE
 - `TransactionSource`: MANUAL, MPESA, AIRTEL_MONEY, TKASH, EQUITEL, BANK, VOICE
-- `Category`: 20+ categories covering student + business life
+- `Category`: 20+ categories (student + business life)
 - `PotStatus`: ACTIVE, COMPLETED, PAUSED
 - `DebtStatus`: ACTIVE, PAID, OVERDUE
 - `ChatRole`: USER, ASSISTANT
@@ -147,8 +160,8 @@ pesaflow/
 Phase 0 — Brand Identity          ████████████ DONE ✅
 Phase 1 — Project Scaffold        ████████████ DONE ✅
 Phase 2 — Database Schema         ████████████ DONE ✅
-Phase 3 — Auth Setup              ░░░░░░░░░░░░ UP NEXT 🔜
-Phase 4 — Core UI                 ░░░░░░░░░░░░ PENDING
+Phase 3 — Auth                    ████████████ DONE ✅
+Phase 4 — Core UI / Dashboard     ████░░░░░░░░ IN PROGRESS 🔨
 Phase 5 — AI Integration          ░░░░░░░░░░░░ PENDING
 Phase 6 — PWA Config              ░░░░░░░░░░░░ PENDING
 Phase 7 — Deploy to Vercel        ░░░░░░░░░░░░ PENDING
@@ -156,63 +169,90 @@ Phase 7 — Deploy to Vercel        ░░░░░░░░░░░░ PENDING
 
 ---
 
-## Git History (key commits)
+## Git History
 ```
 a22b372  Initial commit from Create Next App
-c45989f  feat: initial project scaffold with brand identity, shadcn/ui, and folder architecture
-[next]   feat: database schema + prisma migration init
+c45989f  feat: initial project scaffold + brand identity + shadcn/ui + folder architecture
+3889dfe  feat: database schema + prisma migration init
+3c4816e  docs: add session log and build progress tracker
+8897ed8  feat: auth pages + supabase client setup + middleware route protection  ← LATEST
 ```
 
 ---
 
-## Phase 3 — Auth (NEXT SESSION STARTS HERE)
-**Goal:** Wire up Supabase Auth with Next.js App Router
+## Phase 4 — Core UI / Dashboard (CURRENT — RESUME HERE)
+**Goal:** Build the full dashboard shell, navigation, and core pages.
 
-### Todo:
-1. Create `src/lib/supabase/client.ts` — browser Supabase client
-2. Create `src/lib/supabase/server.ts` — server Supabase client (SSR)
-3. Create `src/lib/supabase/middleware.ts` — session refresh
-4. Create `src/middleware.ts` — route protection
-5. Create `src/lib/prisma/client.ts` — Prisma client singleton
-6. Create `src/types/index.ts` — global TypeScript types
-7. Build `src/app/(auth)/login/page.tsx` — login UI
-8. Build `src/app/(auth)/register/page.tsx` — register UI
-9. Build `src/app/(auth)/layout.tsx` — auth layout
-10. Build `src/app/api/auth/callback/route.ts` — OAuth callback
-11. Test full auth flow end to end
+### Completed so far:
+- ✅ `src/components/layout/Sidebar.tsx` — built, needs wiring
 
-### Key decisions already made:
-- Auth via Supabase Auth (email + Google OAuth)
-- Sessions managed via `@supabase/ssr` cookies
-- Middleware protects all `(dashboard)/*` routes
-- On first login → check `user.onboarded` → redirect to onboarding or dashboard
+### Todo (in order):
+1. Update `src/app/(dashboard)/layout.tsx` — wire in Sidebar
+2. Update `src/app/layout.tsx` — add Inter font + metadata
+3. Build `src/app/(dashboard)/dashboard/page.tsx` — full overview UI
+   - Monthly summary cards (income, expenses, savings, balance)
+   - Category breakdown donut chart (Recharts)
+   - Recent transactions list
+   - Savings pots progress bars
+   - AI insight card
+4. Build `src/app/(dashboard)/transactions/page.tsx`
+   - Transaction list with filters
+   - Quick log form (manual cash entry)
+5. Build `src/app/(dashboard)/budgets/page.tsx`
+   - Budget cards per category
+   - Spend vs limit progress bars
+6. Build `src/app/(dashboard)/savings/page.tsx`
+   - Savings pots grid
+   - Create pot form
+   - Contribution entry
+7. Build `src/app/(dashboard)/ai-coach/page.tsx`
+   - Chat UI with Claude API
+8. Build `src/app/(dashboard)/settings/page.tsx`
+   - Profile, income, currency, notifications
+9. Build API routes for all above
+
+### Key patterns to follow:
+- All dashboard pages use the shared Sidebar layout
+- Server components fetch data, client components handle interactions
+- All KES amounts formatted as: `KES 1,234.50`
+- Dates formatted with date-fns
+- Empty states always have a CTA (call to action)
 
 ---
 
-## Prisma 7 Notes (Important — breaking changes from v5/v6)
+## Prisma 7 Notes (Critical — Breaking Changes)
 - `url` and `directUrl` NO LONGER go in `schema.prisma`
-- Connection URLs now live in `prisma.config.ts` under `datasource.url`
+- Connection URLs live in `prisma.config.ts` under `datasource.url`
 - `migrate` adapter uses `@prisma/adapter-pg` + `pg` package
-- `.env.local` loaded via `dotenv` with `dotenv.config({ path: '.env.local' })`
+- `.env.local` loaded via `dotenv.config({ path: '.env.local' })`
 - Schema datasource block only needs `provider = "postgresql"`
 
 ---
 
 ## Known Issues / Warnings (Non-blocking)
-- Hydration mismatch warning in dev — caused by browser extensions (QuickBooks etc.), not our code
-- LF/CRLF warnings on Windows git — normal, not an error
-- `prisma.config.ts` TS2353 warning on `migrate` property — type definitions lag behind Prisma 7, runtime works fine
-- 10 npm vulnerabilities (5 moderate, 5 high) — all in dev/build tools, not production code
+- Hydration mismatch in dev — browser extensions (QuickBooks), not our code
+- LF/CRLF warnings on Windows git — normal
+- `prisma.config.ts` TS2353 on `migrate` — type defs lag Prisma 7, runtime fine
+- 10 npm vulnerabilities — all in dev/build tools, not production code
 
 ---
 
-## Resume Prompt (use this to start next session)
-> "Continue PesaFlow build. Phases 0-2 complete (brand, scaffold, database).
-> Next is Phase 3 — Supabase Auth setup.
-> Stack: Next.js 14, TypeScript, Supabase, Prisma 7, shadcn/ui (Radix + Nova), Tailwind v4.
-> Repo: kuriamyg/pesaflow.
-> Check SESSION_LOG.md for full context."
+## Supabase Config
+- Site URL: `http://localhost:3000` ✅
+- Redirect URLs: `http://localhost:3000/**` ✅
+- Production URL to add when deploying: `https://pesaflow.vercel.app/**`
+- Auth email confirmation: working ✅
+- RLS: enabled on project creation ✅
 
 ---
 
-*Last updated: Session 1 — 28 June 2026*
+## Resume Prompt (Next Session)
+> "Continue PesaFlow build. Phases 0-3 done. Phase 4 in progress.
+> Sidebar component built. Next: wire Sidebar into dashboard layout,
+> then build full dashboard home page with summary cards + charts.
+> Stack: Next.js 14, TypeScript, Supabase, Prisma 7, shadcn/ui (Radix + Nova), Tailwind v4, Recharts, Lucide.
+> Repo: kuriamyg/pesaflow. Full context in SESSION_LOG.md."
+
+---
+
+*Last updated: Session 2 — 28 June 2026*
