@@ -1,0 +1,272 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+// ─────────────────────────────────────────
+// USER PROFILE
+// Extends Supabase Auth user with app data
+// ─────────────────────────────────────────
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  fullName        String?
+  avatarUrl       String?
+  currency        String    @default("KES")
+  monthlyIncome   Float     @default(0)
+  savingsGoalPct  Float     @default(20)
+  onboarded       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  transactions    Transaction[]
+  budgets         Budget[]
+  savingsPots     SavingsPot[]
+  savingsEntries  SavingsEntry[]
+  debts           Debt[]
+  chamaGroups     ChamaGroup[]
+  aiChats         AiChat[]
+  smsImports      SmsImport[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────
+// TRANSACTION CATEGORIES
+// ─────────────────────────────────────────
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum TransactionSource {
+  MANUAL
+  MPESA
+  AIRTEL_MONEY
+  TKASH
+  EQUITEL
+  BANK
+  VOICE
+}
+
+enum Category {
+  // Expenses
+  RENT
+  ELECTRICITY
+  WATER
+  WIFI_DATA
+  GROCERIES
+  FOOD_DINING
+  TRANSPORT
+  ACADEMIC
+  TECH_BUSINESS
+  CHURCH_GIVING
+  HEALTH
+  PERSONAL_MISC
+  ENTERTAINMENT
+  CLOTHING
+  AIRTIME
+  // Income
+  SALARY
+  FREELANCE
+  BUSINESS
+  FAMILY_SUPPORT
+  TRADING_PROFIT
+  OTHER
+}
+
+// ─────────────────────────────────────────
+// TRANSACTIONS
+// Core of the entire app
+// ─────────────────────────────────────────
+model Transaction {
+  id          String            @id @default(uuid())
+  userId      String
+  amount      Float
+  type        TransactionType
+  category    Category
+  source      TransactionSource @default(MANUAL)
+  description String?
+  note        String?
+  reference   String?           // M-Pesa transaction ID etc.
+  recipient   String?           // Who was paid / who paid
+  date        DateTime          @default(now())
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, date])
+  @@index([userId, category])
+  @@index([userId, type])
+  @@map("transactions")
+}
+
+// ─────────────────────────────────────────
+// BUDGETS
+// Monthly category limits
+// ─────────────────────────────────────────
+model Budget {
+  id          String    @id @default(uuid())
+  userId      String
+  category    Category
+  limitAmount Float
+  month       Int       // 1-12
+  year        Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, month, year])
+  @@index([userId])
+  @@index([userId, month, year])
+  @@map("budgets")
+}
+
+// ─────────────────────────────────────────
+// SAVINGS POTS
+// Named savings goals (envelopes)
+// ─────────────────────────────────────────
+enum PotStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+}
+
+model SavingsPot {
+  id            String       @id @default(uuid())
+  userId        String
+  name          String
+  targetAmount  Float
+  currentAmount Float        @default(0)
+  deadline      DateTime?
+  emoji         String?      // e.g. "📈" for trading capital
+  color         String?      // hex color for UI
+  status        PotStatus    @default(ACTIVE)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries       SavingsEntry[]
+
+  @@index([userId])
+  @@map("savings_pots")
+}
+
+// ─────────────────────────────────────────
+// SAVINGS ENTRIES
+// Individual contributions to a pot
+// ─────────────────────────────────────────
+model SavingsEntry {
+  id          String      @id @default(uuid())
+  userId      String
+  potId       String
+  amount      Float
+  note        String?
+  date        DateTime    @default(now())
+  createdAt   DateTime    @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pot         SavingsPot  @relation(fields: [potId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([potId])
+  @@map("savings_entries")
+}
+
+// ─────────────────────────────────────────
+// DEBT TRACKER
+// Loans: Fuliza, Tala, Branch, KCB etc.
+// ─────────────────────────────────────────
+enum DebtStatus {
+  ACTIVE
+  PAID
+  OVERDUE
+}
+
+model Debt {
+  id            String      @id @default(uuid())
+  userId        String
+  name          String      // e.g. "Fuliza", "Tala Loan"
+  totalAmount   Float
+  remainingAmount Float
+  interestRate  Float?      // percentage
+  dueDate       DateTime?
+  status        DebtStatus  @default(ACTIVE)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("debts")
+}
+
+// ─────────────────────────────────────────
+// CHAMA GROUPS
+// Group savings tracking
+// ─────────────────────────────────────────
+model ChamaGroup {
+  id                String    @id @default(uuid())
+  userId            String
+  name              String
+  contributionAmount Float
+  frequency         String    // "monthly", "weekly"
+  nextDueDate       DateTime?
+  totalContributed  Float     @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("chama_groups")
+}
+
+// ─────────────────────────────────────────
+// AI CHAT HISTORY
+// Stores conversations with AI coach
+// ─────────────────────────────────────────
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+model AiChat {
+  id        String    @id @default(uuid())
+  userId    String
+  role      ChatRole
+  content   String    @db.Text
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("ai_chats")
+}
+
+// ─────────────────────────────────────────
+// SMS IMPORTS
+// Raw SMS data parsed from mobile money
+// ─────────────────────────────────────────
+model SmsImport {
+  id            String            @id @default(uuid())
+  userId        String
+  rawText       String            @db.Text
+  source        TransactionSource
+  parsed        Boolean           @default(false)
+  transactionId String?           // linked transaction after parsing
+  importedAt    DateTime          @default(now())
+
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sms_imports")
+}
